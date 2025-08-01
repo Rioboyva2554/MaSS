@@ -1,5 +1,5 @@
-# RSH (Rio's Shell)
-# A revamped version of RCMSH
+# MaSS (Minimalistic and Simplistic Shell) (renamed due to confusion)
+# A revamped version of RCMSH 
 With this project I have decided to stray from the branding of RCS, and decided to give it an actual name.
 # Whats New
 * I have rebuilt the original shell from the ground up
