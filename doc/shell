@@ -1,12 +1,20 @@
-.TH man 1 "29 July 2025" "0.01" "RSH man page"
+.TH man 1 "8 August 2025" "0.02" "MaSS man page"
 .SH NAME
-RSH: Basic shell made in C 
+MaSS: Basic shell made in C 
 .SH SYNOPSIS
 RSH
 .SH DESCRIPTION
-A basic/minimalistic shell made in c, with 5 commands currently available. why would you use this
+A basic/minimalistic shell made in c, with 5 commands currently available.
+.SH COMMANDS
+     CD: Changes directory
+ exec: Executes a file or command with no arguments
+ LS: Displays all files in a directory
+ PWD: Displays the current working directory
+ help: displays this menu
+ exit: exits the terminal
+If you encouter any proble
 .SH BUGS
-Will save previous arguments if you don't overwrite them
+None currently known
 .SH AUTHOR
 Riley Vega Acosta, rileyva2012@aol.com
 .SH COPYRIGHT

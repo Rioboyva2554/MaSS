@@ -6,44 +6,21 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <dirent.h>
-char builtin_com[15][10] = {"cd", "help", "exit", "exec", "ls"};
-// input (work in progress)
-char readln(char **input, size_t size) {
-  int rows;
-  int collumns;
-  int bytes;
-  while (1) {
-    read(1, (char *)input[rows][collumns], 1);
-    bytes++;
-    if (input[rows][collumns] == ' ') {
-      input[rows][collumns++] = '\0';
-      rows++;
-      collumns = 0;
-    } else if (input[rows][collumns] == '\n') {
-      input[rows][collumns++] = '\0';
-      return bytes;
-    } else if (collumns == (int)size-1) {
-      input[rows][collumns++] = '\0';
-      rows++;
-    } else if ((collumns == (int)size-1) && (rows == (int)size)) {
-	return 2; //exit code 2 means that it was succesful in reading bytes, but exited due to input about to be overflowed
-      }
-    collumns++;
-  }
-}
+char *pwd;
+char builtin_com[15][10] = {"cd", "help", "exit", "exec", "ls", "pwd"};
 // the commands
-int shell_cd(char args[100][100], char* pwd) {
-    if (args[1] == NULL) {
+int shell_cd(char **args) {
+  if ((args[1] == NULL) || (args[1][0] == '\0')) {
       printf("Expected atleast 1 argument\n");
     }
   int i = chdir(args[1]);
-  if (i != 0) {
+  if ((i != 0) && (args[1][0] != '\0')) {
     printf("No such file or directory: %s\n", args[1]);
     return -1;
   } 
 }
 int shell_help() {
-  printf("RSH V0.01\n List of commands:\n cd: changes directory\n exec: executes a file or command with no arguments\n ls: displays all files in a directory \n help: displays this menu\n exit: exits the terminal\nIf you encouter any problems please report them on github.\n");
+  printf("MaSS V0.02\n List of commands:\n CD: Changes directory\n exec: Executes a file or command with no arguments\n LS: Displays all files in a directory\n PWD: Displays the current working directory\n help: displays this menu\n exit: exits the terminal\nIf you encouter any problems please report them on github.\n");
   return 0;
 }
 
@@ -53,32 +30,36 @@ int shell_exit() {
 int shell_exec(char *com) {
   system(com); //throwback to RCMSH
 }
-int shell_ls(char args[100][100]) {
+int shell_pwd(void) {
+  pwd = getcwd(NULL, 0);
+  printf("%s\n", pwd);
+}
+int shell_ls(char **args) {
   DIR *folder;
   struct dirent *foldername;
-    if (args[1] == NULL) {
-      folder = opendir(".");
+  if ((args[1] == NULL) || (args[1][0] == '\0')) { // how is a null terminator and NULL different (well I know, but it's still ridiculous)
+    folder = opendir("."); // opens directory
     } else {
       folder = opendir(args[1]);
     }
       if (folder == NULL) {
-	printf("Folder %s does not exist\n");
+	printf("Folder %s does not exist\n", args[1]);
 	return -1;
       }
-      while (foldername = readdir(folder)) {
-	printf("%s\n", foldername->d_name);
+      while (foldername = readdir(folder)) { //reads variable which contains dir contents
+	printf("%s\n", foldername->d_name); 
       }
       closedir(folder);
       return 0;
 }
  
-int shell_execute(char *com, char *args[100]) {
+int shell_execute(char *com, char **args) {
   int status;
   int error;
   pid_t spoon = fork();
   if (spoon == 0) {
   fflush(stdout);
-  error = execvp(com, args);
+  error = execvp(com, args); //It's not a valid string? huh
       if (error == -1) {
 	printf("No such command: %s\n", com);
 	exit(errno);
@@ -89,7 +70,7 @@ int shell_execute(char *com, char *args[100]) {
     return -1;
   } else {
     if(WIFEXITED(status)) {
-         printf("child exited with = %d\n",WEXITSTATUS(status));
+      //printf("child exited with = %d\n",WEXITSTATUS(status));
     }
         do {
       waitpid(spoon, &status, WUNTRACED);
@@ -98,7 +79,7 @@ int shell_execute(char *com, char *args[100]) {
   return 0;
 }
 // Handling of the commands
-int shell(char *command, char **arguments, char args[100][100], char *pwd) {
+int shell(char *command, char **arguments) {
     int i;
   for (i = 0; i < 6; i++) {
     if (strcmp(command, builtin_com[i]) == 0) { //This should work, why the fuck does it not then // it was the switch I am actually braindead
@@ -107,7 +88,7 @@ int shell(char *command, char **arguments, char args[100][100], char *pwd) {
   }
   switch (i) {
   case 0:
-    shell_cd(args, pwd);
+    shell_cd(arguments);
     break;
   case 1:
     shell_help();
@@ -119,7 +100,10 @@ int shell(char *command, char **arguments, char args[100][100], char *pwd) {
     shell_exec(command);
     break;
   case 4:
-    shell_ls(args);
+    shell_ls(arguments);
+    break;
+  case 5:
+    shell_pwd();
     break;
   default:
     if (command == NULL) {
@@ -128,28 +112,21 @@ int shell(char *command, char **arguments, char args[100][100], char *pwd) {
       shell_execute(command, arguments);
     }
   }
-  /*  int t = 0;
-        char null[100][100];
-              while (1) {
-	      arguments[t] = strndup(/null[t], 100);
-	      args[t][0] = 0;
-	if (t == 20) {
-	  break;
-	}
-	t++;
-	} */ // wouldn't work
-
+  return 0;
 }
 
-int main() {
+int main(void) {
   char input[100];
   char hostname[25];
   char *user = getenv("USER");
-  char comarg[100][100]; // I'm praying this works, If it doesn't I'll hug my blahaj and cry myself to sleep tonight // I will be crying myself to sleep tonight
   char *buf = (char*)malloc(51);
-  char *pwd = getcwd(NULL, 0);
+  char *thing = (char*)malloc(10*sizeof(char*)+1); // had to manually allocate memory instead of using strtok for initialization
   FILE *test;
     int x = 0;
+          int a = 0;
+      int z = 1;
+      int t = 0;
+      char **comarg2 = calloc(2+100,sizeof(char**));
     // grabbing the host name
     test = fopen("/etc/hostname", "r");
     fgets(hostname, 25, test);
@@ -157,39 +134,23 @@ int main() {
     hostname[i] = 0;
     while(1) {
       //input
-      pwd= getcwd(NULL, 0);
-      printf("[%s@%s %s]$ ",user,hostname,pwd);
+      pwd = getcwd(NULL, 0);
+      printf("|%s@%s %s|# ",user,hostname,pwd);
       fflush(stdout);
-      //readln(comarg, 100);
-      read(1, input, 100);
+      fgets(input, 99, stdin);
     // tokenization/processing
-    char *thing = strtok(input, " \n");
-    int r = x;
+      thing = strtok(input, " \n\r"); 
     x = 0;
-    while (thing != NULL) {
-      strncpy(comarg[x], thing, 100); // I love valgrind and gdb //kill me // why //fixed
-          x++;
-    thing = strtok(NULL, " \n");
-    }
-    comarg[x][0] = '\0';
-    //spamification/more processing (I could go for some spam ham actually)
-    x = x - 1;
-    char com[100];
-    strncpy(com, comarg[0], 100);
-      char arg[100][100];
-      int a;
-      int z = 1;
- //my code works when I write it, and then I don't touch it, otherwise it'll break somehow
-      int t = 0;
-      char **comarg2 = calloc(100,sizeof(char*));
-      while (1) {
-	comarg2[t] = strndup(comarg[t], 100); // this has taken me several days to figure out
-	if (t == x) {
-	  break;
-	}
-	t++;
+      while (thing != NULL) {
+	comarg2[x] = strdup(thing); // this has taken me several days to figure out
+	x++;
+	thing = strtok(NULL, " \n");
       }
-      shell(com, comarg2, comarg, pwd);
+      comarg2[x] = NULL;
+    //more processing (mostly copying different parts of comarg)
+    char com[100];
+    strcpy(com, comarg2[0]);
+      shell(com, comarg2);
     }
 }
 
