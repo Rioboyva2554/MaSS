@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <dirent.h>
 char *pwd;
+char *buf;
+char *thing;
 char builtin_com[15][10] = {"cd", "help", "exit", "exec", "ls", "pwd"};
 // the commands
 int shell_cd(char **args) {
@@ -25,6 +27,8 @@ int shell_help() {
 }
 
 int shell_exit() {
+  free(buf);
+  free(thing);
   exit(0);
 }
 int shell_exec(char *com) {
@@ -82,7 +86,7 @@ int shell_execute(char *com, char **args) {
 int shell(char *command, char **arguments) {
     int i;
   for (i = 0; i < 6; i++) {
-    if (strcmp(command, builtin_com[i]) == 0) { //This should work, why the fuck does it not then // it was the switch I am actually braindead
+    if (strcmp(command, builtin_com[i]) == 0) { //This should work, why the [hell] does it not then // it was the switch I am actually braindead
       break;
     }
   }
@@ -119,14 +123,27 @@ int main(void) {
   char input[100];
   char hostname[25];
   char *user = getenv("USER");
-  char *buf = (char*)malloc(51);
-  char *thing = (char*)malloc(10*sizeof(char*)+1); // had to manually allocate memory instead of using strtok for initialization
+  char *home = getenv("HOME");
+  buf = (char*)malloc(51);
+  thing = (char*)malloc(10*sizeof(char*)+1); // had to manually allocate memory instead of using strtok for initialization
   FILE *test;
+  FILE *musc;
+  bool muscisyes; 
     int x = 0;
           int a = 0;
       int z = 1;
       int t = 0;
+      int v = 0;
+      int l = 1;
       char **comarg2 = calloc(2+100,sizeof(char**));
+      // opening .msuc (which is basically a lobotimzed .bashrc) file
+      char muscloc[30];
+      sprintf(muscloc, "%s/.msuc", home);
+      musc = fopen(muscloc, "r");
+      if (musc == NULL) {
+	muscisyes = false; // musc is no
+      }
+      muscisyes = true; // musc is yes, cue the applause mike
     // grabbing the host name
     test = fopen("/etc/hostname", "r");
     fgets(hostname, 25, test);
@@ -137,7 +154,23 @@ int main(void) {
       pwd = getcwd(NULL, 0);
       printf("|%s@%s %s|# ",user,hostname,pwd);
       fflush(stdout);
-      fgets(input, 99, stdin);
+      if (muscisyes == false) {
+	printf("|%s@%s %s|# ",user,hostname,pwd);
+      fflush(stdout);
+	fgets(input, 99, stdin);
+      } else {
+	for (v = 0; v > l;) {
+	  v++;
+	fgets(input, 99, musc);
+	l++;
+	}
+	  if (input == NULL) {
+	    muscisyes = false;
+	    printf("|%s@%s %s|# ",user,hostname,pwd);
+	    fflush(stdout);
+	    fgets(input, 99, stdin);
+	  }
+      }
     // tokenization/processing
       thing = strtok(input, " \n\r"); 
     x = 0;
@@ -147,9 +180,12 @@ int main(void) {
 	thing = strtok(NULL, " \n");
       }
       comarg2[x] = NULL;
-    //more processing (mostly copying different parts of comarg)
     char com[100];
+    if (comarg2[0] == NULL) {
+      continue;
+    } else {
     strcpy(com, comarg2[0]);
+    }
       shell(com, comarg2);
     }
 }
