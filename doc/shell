@@ -1,10 +1,10 @@
-.TH man 1 "8 August 2025" "0.02" "MaSS man page"
+.TH man 1 "29 August 2025" "0.03" "MaSS man page"
 .SH NAME
 MaSS: Basic shell made in C 
 .SH SYNOPSIS
 RSH
 .SH DESCRIPTION
-A basic/minimalistic shell made in c, with 5 commands currently available.
+A basic/minimalistic shell made in c, with 5 commands currently available. Has .bashrc alternative called .msuc
 .SH COMMANDS
      CD: Changes directory
  exec: Executes a file or command with no arguments

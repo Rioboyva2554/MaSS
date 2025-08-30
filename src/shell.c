@@ -22,7 +22,7 @@ int shell_cd(char **args) {
   } 
 }
 int shell_help() {
-  printf("MaSS V0.02\n List of commands:\n CD: Changes directory\n exec: Executes a file or command with no arguments\n LS: Displays all files in a directory\n PWD: Displays the current working directory\n help: displays this menu\n exit: exits the terminal\nIf you encouter any problems please report them on github.\n");
+  printf("MaSS V0.03\n List of commands:\n CD: Changes directory\n exec: Executes a file or command with no arguments\n LS: Displays all files in a directory\n PWD: Displays the current working directory\n help: displays this menu\n exit: exits the terminal\nIf you encouter any problems please report them on github.\n");
   return 0;
 }
 
@@ -120,6 +120,7 @@ int shell(char *command, char **arguments) {
 }
 
 int main(void) {
+  // variable declarations
   char input[100];
   char hostname[25];
   char *user = getenv("USER");
@@ -135,6 +136,8 @@ int main(void) {
       int t = 0;
       int v = 0;
       int l = 1;
+      	int o = 0;
+	int p = 0;
       char **comarg2 = calloc(2+100,sizeof(char**));
       // opening .msuc (which is basically a lobotimzed .bashrc) file
       char muscloc[30];
@@ -143,7 +146,7 @@ int main(void) {
       if (musc == NULL) {
 	muscisyes = false; // musc is no
       }
-      muscisyes = true; // musc is yes, cue the applause mike
+      muscisyes = true; // musc is yes, cue the applause mike // Looking back on this I realise I am not funny and never will be
     // grabbing the host name
     test = fopen("/etc/hostname", "r");
     fgets(hostname, 25, test);
@@ -152,27 +155,38 @@ int main(void) {
     while(1) {
       //input
       pwd = getcwd(NULL, 0);
-      printf("|%s@%s %s|# ",user,hostname,pwd);
-      fflush(stdout);
       if (muscisyes == false) {
 	printf("|%s@%s %s|# ",user,hostname,pwd);
       fflush(stdout);
 	fgets(input, 99, stdin);
       } else {
-	for (v = 0; v > l;) {
-	  v++;
-	fgets(input, 99, musc);
-	l++;
+	char home[100][100];
+	while (1) {
+	  fgets(home[o], 99, musc);
+	  if ((home[o][0] == '\0') && (o != 0)) {
+	    break;
+	  }
+	  	  o++;
 	}
-	  if (input == NULL) {
+	o = o - 1;
+	if (p <= o) {
+	  strcpy(input, home[p]);
+	} else {
+	  muscisyes = false;
+	}
+	p++;
+	if ((input == NULL || muscisyes == false)) {
 	    muscisyes = false;
+	    /* struct termios modes;
+  modes.c_lflag &= ISIG;
+  tcsetattr(STDIN_FILENO, TCSANOW, &modes);*/ // set terminal attributes
 	    printf("|%s@%s %s|# ",user,hostname,pwd);
 	    fflush(stdout);
 	    fgets(input, 99, stdin);
 	  }
       }
     // tokenization/processing
-      thing = strtok(input, " \n\r"); 
+      thing = strtok(input, " \n\r");
     x = 0;
       while (thing != NULL) {
 	comarg2[x] = strdup(thing); // this has taken me several days to figure out
@@ -186,7 +200,7 @@ int main(void) {
     } else {
     strcpy(com, comarg2[0]);
     }
-      shell(com, comarg2);
+    shell(com, comarg2);
     }
 }
 
